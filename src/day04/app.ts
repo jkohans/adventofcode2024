@@ -38,11 +38,12 @@ const isValid = (
         return false;
     }
 
+    // unnecessary for XMAS and MAS which are all made up of distinct letters
     // don't count any previously used coordinates
     // used as array over set/hash for readability & debugging
-    if (used.some(({x, y}: Coordinate) => x === next.x && y === next.y)) {
-        return false;
-    }
+    // if (used.some(({x, y}: Coordinate) => x === next.x && y === next.y)) {
+    //     return false;
+    // }
 
     return true;
 };
@@ -51,14 +52,12 @@ const findOccurrencesStartingAt = (
     board: string[][], 
     word: string, 
     last: Coordinate, 
-    used: Coordinate[]) => 
+    used: Coordinate[]) : Coordinate[][] => 
 {
-    // horizontal, vertical, diagonal, or backwards
-    // not all at the same time :-)
-    let numOccurrences = 0;
+    let occurrences: Coordinate[][] = [];
     
     if (word.length === 0) {  // base case
-        return 1;
+        return [used];
     }
 
     // establish the direction
@@ -72,12 +71,13 @@ const findOccurrencesStartingAt = (
                 const nextLetter = board[next.x][next.y];
 
                 if (word.startsWith(nextLetter)) {
-                    numOccurrences += findOccurrencesStartingAt(
-                        board, 
-                        word.substring(1), 
-                        next, 
-                        used.concat([next])
-                    )!;
+                    occurrences = occurrences.concat(
+                        findOccurrencesStartingAt(
+                            board, 
+                            word.substring(1), 
+                            next, 
+                            used.concat([next])
+                    )!);
                 }
             }
         }
@@ -96,27 +96,26 @@ const findOccurrencesStartingAt = (
             y: lastOne.y + delta.y
         };
 
-        if (!isValid(board, next, used)) {
-            return 0;
-        }
+        if (isValid(board, next, used)) {
+            const nextLetter = board[next.x][next.y];
 
-        const nextLetter = board[next.x][next.y];
-
-        if (word.startsWith(nextLetter)) {
-            numOccurrences += findOccurrencesStartingAt(
-                board, 
-                word.substring(1), 
-                next, 
-                used.concat([next])
-            )!;
+            if (word.startsWith(nextLetter)) {
+                occurrences = occurrences.concat(
+                    findOccurrencesStartingAt(
+                        board, 
+                        word.substring(1), 
+                        next, 
+                        used.concat([next])
+                )!);
+            }
         }
     }
 
-    return numOccurrences;
+    return occurrences;
 };
 
 const findAllOccurrences = (board: string[][], word: string) => {
-    let totalOccurrences = 0;
+    let allOccurrences = [];
 
     for (let i=0; i < board.length; i++) {
         for (let j = 0; j < board[i].length; j++) {
@@ -124,20 +123,22 @@ const findAllOccurrences = (board: string[][], word: string) => {
 
             if (word.startsWith(letter)) {
                 const coordinate = {x: i, y: j}
-                const numOccurrences = findOccurrencesStartingAt(
+                const occurences = findOccurrencesStartingAt(
                     board, 
                     word.substring(1), 
                     coordinate, 
                     [coordinate]);
-                totalOccurrences += numOccurrences!;
+                allOccurrences.push(...occurences)!;
             }
         }
     }
 
-    return totalOccurrences;
+    return allOccurrences;
 }
 
 const board = readData('src/day04/input.txt');
-console.log(findAllOccurrences(board, "XMAS"));
+console.log(findAllOccurrences(board, "XMAS").length);
+
+// find all MAS's on diagonals and then cross-check which have overlapping As
 
 export {};
