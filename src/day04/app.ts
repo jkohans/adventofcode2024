@@ -136,9 +136,42 @@ const findAllOccurrences = (board: string[][], word: string) => {
     return allOccurrences;
 }
 
-const board = readData('src/day04/input.txt');
-console.log(findAllOccurrences(board, "XMAS").length);
+const isDiagonal = (used: Coordinate[]) => {
+    const lastOne = used[used.length-1];
+    const lastTwo = used[used.length-2];
 
+    const delta = {
+        x: lastOne.x - lastTwo.x,
+        y: lastOne.y - lastTwo.y
+    }
+
+    return Math.abs(delta.x) === 1 && Math.abs(delta.y) === 1
+};
+
+const countOverlappingDiagonals = (diagonals: Coordinate[][]) => {
+    // here we can be a little tricky since we know the target word is always MAS
+    // we can look for pairs of diagonals where the 2nd letter (A) is overlapping
+    let count = 0;
+
+    for (let i=0; i < diagonals.length; i++) {
+        for (let j=i+1; j < diagonals.length; j++) {  // start from i+1 to prevent dup matches
+            const diagonal1 = diagonals[i];
+            const diagonal2 = diagonals[j];
+
+            // check x&y for 2nd letter match
+            if (diagonal1[1].x === diagonal2[1].x && diagonal1[1].y === diagonal2[1].y) {
+                count = count + 1;
+            }
+        }
+    }
+
+    return count;
+};
+
+const board = readData('src/day04/input.txt');
+const allOccurrences = findAllOccurrences(board, "MAS");
 // find all MAS's on diagonals and then cross-check which have overlapping As
+const diagonals = allOccurrences.filter(isDiagonal);
+console.log(countOverlappingDiagonals(diagonals));
 
 export {};
